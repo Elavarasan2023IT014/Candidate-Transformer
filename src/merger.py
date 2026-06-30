@@ -5,8 +5,7 @@ class Merger:
 
     def __init__(self):
 
-        # Source priority
-        # Higher value = More trusted
+        # Higher value = Higher priority
         self.source_priority = {
             "resume": 2,
             "csv": 1
@@ -14,9 +13,60 @@ class Merger:
 
     # ----------------------------------------------------
 
+    def is_same_candidate(self, csv_data, resume_data):
+        """
+        Match candidates in the following order:
+        1. Email
+        2. Phone
+        3. Name
+        """
+
+        # -------------------------
+        # Email
+        # -------------------------
+        csv_email = csv_data.get("email")
+        resume_email = resume_data.get("email")
+
+        if csv_email and resume_email:
+            if csv_email.strip().lower() == resume_email.strip().lower():
+                return True
+
+        # -------------------------
+        # Phone
+        # -------------------------
+        csv_phone = csv_data.get("phone")
+        resume_phone = resume_data.get("phone")
+
+        if csv_phone and resume_phone:
+
+            csv_phone = "".join(filter(str.isdigit, csv_phone))
+            resume_phone = "".join(filter(str.isdigit, resume_phone))
+
+            if csv_phone == resume_phone:
+                return True
+
+        # -------------------------
+        # Name
+        # -------------------------
+        csv_name = csv_data.get("name")
+        resume_name = resume_data.get("name")
+
+        if csv_name and resume_name:
+            if csv_name.strip().lower() == resume_name.strip().lower():
+                return True
+
+        return False
+
+    # ----------------------------------------------------
+
     def merge(self, csv_data, resume_data):
 
+        # Verify both inputs belong to same candidate
+        if not self.is_same_candidate(csv_data, resume_data):
+            raise Exception("CSV and Resume belong to different candidates.")
+
         profile = {
+
             "candidate_id": "CAND-001",
 
             "full_name": None,
@@ -33,6 +83,7 @@ class Merger:
             "overall_confidence": 0,
 
             "provenance": []
+
         }
 
         confidence_scores = []
@@ -40,7 +91,6 @@ class Merger:
         # -------------------------
         # Name
         # -------------------------
-
         profile["full_name"] = self.choose_value(
             csv_data.get("name"),
             resume_data.get("name"),
@@ -53,7 +103,6 @@ class Merger:
         # -------------------------
         # Email
         # -------------------------
-
         email = self.choose_value(
             csv_data.get("email"),
             resume_data.get("email"),
@@ -69,7 +118,6 @@ class Merger:
         # -------------------------
         # Phone
         # -------------------------
-
         phone = self.choose_value(
             csv_data.get("phone"),
             resume_data.get("phone"),
@@ -83,12 +131,11 @@ class Merger:
         confidence_scores.append(97)
 
         # -------------------------
-        # Company
+        # Current Company
         # -------------------------
-
         company = self.choose_value(
             csv_data.get("current_company"),
-            None,
+            resume_data.get("current_company"),
             "current_company",
             profile
         )
@@ -100,10 +147,9 @@ class Merger:
         # -------------------------
         # Headline
         # -------------------------
-
         headline = self.choose_value(
             csv_data.get("title"),
-            None,
+            resume_data.get("title"),
             "headline",
             profile
         )
@@ -115,9 +161,8 @@ class Merger:
         # -------------------------
         # Location
         # -------------------------
-
         location = self.choose_value(
-            None,
+            csv_data.get("location"),
             resume_data.get("location"),
             "location",
             profile
@@ -130,7 +175,6 @@ class Merger:
         # -------------------------
         # Skills
         # -------------------------
-
         profile["skills"] = self.merge_skills(
             csv_data.get("skills", []),
             resume_data.get("skills", [])
@@ -141,7 +185,6 @@ class Merger:
         # -------------------------
         # Experience
         # -------------------------
-
         profile["experience"] = deepcopy(
             resume_data.get("experience", [])
         )
@@ -151,13 +194,15 @@ class Merger:
         # -------------------------
         # Education
         # -------------------------
-
         profile["education"] = deepcopy(
             resume_data.get("education", [])
         )
 
         confidence_scores.append(95)
 
+        # -------------------------
+        # Overall Confidence
+        # -------------------------
         profile["overall_confidence"] = round(
             sum(confidence_scores) / len(confidence_scores),
             2
@@ -174,32 +219,35 @@ class Merger:
         field,
         profile
     ):
+        """
+        Choose value based on source priority.
+        """
 
-        if resume_value:
-
-            profile["provenance"].append({
-
-                "field": field,
-                "source": "resume",
-                "confidence": 0.95
-
-            })
-
-            return resume_value
+        candidates = []
 
         if csv_value:
+            candidates.append(("csv", csv_value))
 
-            profile["provenance"].append({
+        if resume_value:
+            candidates.append(("resume", resume_value))
 
-                "field": field,
-                "source": "csv",
-                "confidence": 0.80
+        if not candidates:
+            return None
 
-            })
+        source, value = max(
+            candidates,
+            key=lambda item: self.source_priority[item[0]]
+        )
 
-            return csv_value
+        profile["provenance"].append({
 
-        return None
+            "field": field,
+            "source": source,
+            "confidence": 0.95 if source == "resume" else 0.80
+
+        })
+
+        return value
 
     # ----------------------------------------------------
 
@@ -210,7 +258,6 @@ class Merger:
     ):
 
         merged = []
-
         seen = set()
 
         for skill in csv_skills + resume_skills:
@@ -219,15 +266,19 @@ class Merger:
 
                 seen.add(skill)
 
+                sources = []
+
+                if skill in csv_skills:
+                    sources.append("csv")
+
+                if skill in resume_skills:
+                    sources.append("resume")
+
                 merged.append({
 
                     "name": skill,
-
                     "confidence": 0.90,
-
-                    "sources": ["resume"]
-                    if skill in resume_skills
-                    else ["csv"]
+                    "sources": sources
 
                 })
 
