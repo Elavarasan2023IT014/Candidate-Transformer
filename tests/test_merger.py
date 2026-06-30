@@ -1,8 +1,13 @@
 import sys
 import os
+import pytest
 
 # Add src folder to Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "src")
+    )
+)
 
 from merger import Merger
 
@@ -49,10 +54,6 @@ def test_merge_candidate():
 
     profile = merger.merge(csv_data, resume_data)
 
-    # -------------------------
-    # Basic Assertions
-    # -------------------------
-
     assert profile["full_name"] == "John Doe"
 
     assert profile["emails"][0] == "john.doe@gmail.com"
@@ -79,11 +80,13 @@ def test_merge_candidate():
 def test_resume_priority():
 
     csv_data = {
-        "name": "John Doe"
+        "name": "John Doe",
+        "email": "john@gmail.com"
     }
 
     resume_data = {
-        "name": "Johnathan Doe"
+        "name": "Johnathan Doe",
+        "email": "john@gmail.com"
     }
 
     merger = Merger()
@@ -104,7 +107,10 @@ def test_missing_resume_values():
         "title": "Software Engineer"
     }
 
-    resume_data = {}
+    # Resume has only identity information
+    resume_data = {
+        "email": "john@gmail.com"
+    }
 
     merger = Merger()
 
@@ -114,16 +120,22 @@ def test_missing_resume_values():
 
     assert profile["emails"][0] == "john@gmail.com"
 
+    assert profile["current_company"] == "Google"
+
 
 def test_skill_merge():
 
     csv_data = {
+        "name": "John Doe",
+        "email": "john@gmail.com",
         "skills": [
             "Python"
         ]
     }
 
     resume_data = {
+        "name": "John Doe",
+        "email": "john@gmail.com",
         "skills": [
             "Python",
             "React",
@@ -142,3 +154,26 @@ def test_skill_merge():
     assert "React" in skill_names
 
     assert "SQL" in skill_names
+
+    assert len(skill_names) == 3
+
+
+def test_different_candidate():
+
+    csv_data = {
+        "name": "John Doe",
+        "email": "john@gmail.com"
+    }
+
+    resume_data = {
+        "name": "Alice Smith",
+        "email": "alice@gmail.com"
+    }
+
+    merger = Merger()
+
+    with pytest.raises(Exception) as exc:
+
+        merger.merge(csv_data, resume_data)
+
+    assert "different candidates" in str(exc.value).lower()
