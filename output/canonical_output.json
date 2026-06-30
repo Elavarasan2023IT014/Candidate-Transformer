@@ -1,0 +1,98 @@
+{
+    "candidate_id": "CAND-001",
+    "full_name": "John Doe",
+    "emails": [
+        "john.doe@gmail.com"
+    ],
+    "phones": [
+        "+919876543210"
+    ],
+    "headline": "SDE",
+    "current_company": "Google",
+    "location": "Chennai, Tamil Nadu, India",
+    "skills": [
+        {
+            "name": "Python",
+            "confidence": 0.9,
+            "sources": [
+                "resume"
+            ]
+        },
+        {
+            "name": "Java",
+            "confidence": 0.9,
+            "sources": [
+                "resume"
+            ]
+        },
+        {
+            "name": "React",
+            "confidence": 0.9,
+            "sources": [
+                "resume"
+            ]
+        },
+        {
+            "name": "Machine Learning",
+            "confidence": 0.9,
+            "sources": [
+                "resume"
+            ]
+        },
+        {
+            "name": "SQL",
+            "confidence": 0.9,
+            "sources": [
+                "resume"
+            ]
+        }
+    ],
+    "experience": [
+        {
+            "company": "Google",
+            "title": "Software Engineer",
+            "duration": "Jan 2022 - Present",
+            "summary": "Worked on scalable backend systems."
+        }
+    ],
+    "education": [
+        {
+            "degree": "B.Tech Computer Science",
+            "institution": "ABC Engineering College",
+            "year": "2022"
+        }
+    ],
+    "overall_confidence": 93.56,
+    "provenance": [
+        {
+            "field": "full_name",
+            "source": "resume",
+            "confidence": 0.95
+        },
+        {
+            "field": "emails",
+            "source": "resume",
+            "confidence": 0.95
+        },
+        {
+            "field": "phones",
+            "source": "resume",
+            "confidence": 0.95
+        },
+        {
+            "field": "current_company",
+            "source": "csv",
+            "confidence": 0.8
+        },
+        {
+            "field": "headline",
+            "source": "csv",
+            "confidence": 0.8
+        },
+        {
+            "field": "location",
+            "source": "resume",
+            "confidence": 0.95
+        }
+    ]
+}
